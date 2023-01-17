@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Mon 1er jeu Phaser</title>
+        <script
+            src="//cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.js">
+        </script>
+        <style type="text/css"> 
+            body { margin: 0; }
+        </style>
+    </head>
+
+
+    <body>
+        <script type="text/javascript">
+            
+            var config = {
+                type: Phaser.AUTO,
+                width: 1200, height: 800,
+                physics: {
+                    default: 'arcade',
+                    arcade: {
+                    gravity: { y: 200 },
+                    debug: false
+                    }
+                },
+                input:{gamepad:true},
+
+                scene: {preload: preload, create: create, update: update }
+
+               
+
+            };
+
+            new Phaser.Game(config);
+
+            function preload(){
+                this.load.spritesheet('perso','assets/perso.png',
+                { frameWidth: 32, frameHeight: 32 });
+                this.load.image('fond', 'assets/background.png')
+                this.load.image("Phaser_tileset", "assets/Tileset.png");
+                this.load.tilemapTiledJSON("carte", "assets/Map_Tiled.json");
+            }
+
+
+
+            var playerStats = {
+ 
+
+
+                // player horizontal speed
+                playerSpeed: 200,
+
+                // player force
+                playerJump: 200
+}
+
+
+
+
+            var cursors;
+            var gameOver;
+
+            gameOver=false;
+
+            function create(){
+
+
+                this.add.image(800, 800, 'fond'); 
+                const carteDuNiveau = this.add.tilemap("carte");
+
+                const tileset = carteDuNiveau.addTilesetImage(
+                    "tuiles_de_jeu",
+                    "Phaser_tileset"
+                );
+
+
+
+                const calque_plateformes = carteDuNiveau.createLayer(
+                    "sol",
+                    tileset
+                );
+
+                const calque_deco = carteDuNiveau.createLayer(
+                    "Obstacle",
+                    tileset
+                );
+
+
+
+                calque_plateformes.setCollisionByProperty({estSolide: true});
+
+                
+
+                //spawn du joueur
+                this.player = this.physics.add.sprite(50, 1520, 'perso');
+
+                this.player.setBounce(0.2);
+                this.player.setCollideWorldBounds(false);
+
+
+                this.physics.add.collider(this.player, calque_plateformes); 
+
+
+                // redimentionnement du monde avec les dimensions calculées via tiled
+                this.physics.world.setBounds(0, 0, 1600, 1600);
+                //  ajout du champs de la caméra de taille identique à celle du monde
+                this.cameras.main.setBounds(0, 0, 1600, 1600);
+                // ancrage de la caméra sur le joueur
+                this.cameras.main.startFollow(this.player); 
+
+
+                this.onWall=false;
+                this.canJump = true;
+
+                this.anims.create({
+                    key: 'left',
+                    frames: this.anims.generateFrameNumbers('perso', {start:0,end:3}),
+                    frameRate: 10,
+                    repeat: -1
+                });
+                this.anims.create({
+                    key: 'turn',
+                    frames: [ { key: 'perso', frame: 4 } ],
+                    frameRate: 20
+                });
+                this.anims.create({
+                    key: 'right',
+                    frames: this.anims.generateFrameNumbers('perso', {start:5,end:8}),
+                    frameRate: 10,
+                    repeat: -1
+                });
+                
+                cursors = this.input.keyboard.createCursorKeys();
+
+
+            }
+
+
+
+
+
+
+
+            function update(){
+
+
+
+                
+
+                if (gameOver){return;}
+
+                if (cursors.left.isDown){ //si la touche gauche est appuyée
+                    this.player.setVelocityX(-playerStats.playerSpeed); //alors vitesse négative en X
+                    this.player.anims.play('left', true); //et animation => gauche
+                }
+                else if (cursors.right.isDown){ //sinon si la touche droite est appuyée
+                    this.player.setVelocityX(playerStats.playerSpeed); //alors vitesse positive en X
+                    this.player.anims.play('right', true); //et animation => droite
+
+                }
+                else{ // sinon
+                    this.player.setVelocityX(0); //vitesse nulle
+                    this.player.anims.play('turn'); //animation fait face caméra
+                }
+
+
+
+                if ((cursors.up.isDown && this.player.body.blocked.down) || (cursors.up.isDown && this.onWall==true)){
+                    //si touche haut appuyée ET que le perso touche le sol
+                    this.player.setVelocityY(-playerStats.playerJump); //alors vitesse verticale négative
+
+                      // is the hero on a wall?
+                    if(this.onWall){
+ 
+                        this.player.scale.x *= -1;
+
+                    }
+
+                    // hero can't jump anymore
+                    this.canJump = false;
+
+                    // hero is not on the wall anymore
+                    this.onWall = false;
+                    
+
+
+
+
+                }
+
+                if (cursors.down.isDown && !this.player.body.touching.down){ //si la touche bas est appuyée en saut
+                    this.player.setVelocityY(450); 
+                } 
+
+                if(this.player.body.blocked.down){
+ 
+                    // hero can jump
+                    this.canJump = true;
+
+                    // hero not on the wall
+                    this.onWall = false;
+                }
+
+                if(this.player.body.blocked.right && this.player.body.blocked.down){
+ 
+                    // horizontal flipping hero sprite
+                    this.player.scale.x = -1;
+                }
+
+                if(this.player.body.blocked.right && !this.player.body.blocked.down){
+
+                    this.onWall = true;
+                }
+
+                if(this.player.body.blocked.left && this.player.body.blocked.down){
+                    this.player.scale.x = 1;
+                }
+
+                if(this.player.body.blocked.left && !this.player.body.blocked.down){
+                    this.onWall = true;
+                    
+                }
+
+
+            }
+
+
+
+
+
+
+
+
+
+        </script>
+    </body>
+</html>
