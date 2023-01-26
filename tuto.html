@@ -22,7 +22,7 @@
                     default: 'arcade',
                     arcade: {
                     gravity: { y: 200 },
-                    debug: false
+                    debug: true
                     }
                 },
                 input:{gamepad:true},
@@ -96,7 +96,7 @@
                 //spawn du joueur
                 this.player = this.physics.add.sprite(50, 1520, 'perso');
 
-                this.player.setBounce(0.2);
+                this.player.setBounce(0.05);
                 this.player.setCollideWorldBounds(false);
 
 
@@ -113,6 +113,11 @@
 
                 this.onWall=false;
                 this.canJump = true;
+                this.canWallJump = false;
+                this.ancored = false;
+                this.walljumpCooldown = 0;
+                this.ancorTimer =0;
+
 
                 this.anims.create({
                     key: 'left',
@@ -145,6 +150,17 @@
 
             function update(){
 
+                this.walljumpCooldown = this.walljumpCooldown + 1
+                this.ancorTimer = this.ancorTimer +1
+
+                
+
+
+                console.log("cooldown"+ this.walljumpCooldown);
+                console.log("jump"+ this.canJump);
+                console.log("walljump"+ this.canWallJump);
+                console.log("wall"+ this.onWall);
+
 
 
                 
@@ -166,29 +182,66 @@
                 }
 
 
-
-                if ((cursors.up.isDown && this.player.body.blocked.down) || (cursors.up.isDown && this.onWall==true)){
+                // Regular jump
+                if ((cursors.up.isDown && this.player.body.blocked.down) ){
                     //si touche haut appuyée ET que le perso touche le sol
                     this.player.setVelocityY(-playerStats.playerJump); //alors vitesse verticale négative
 
-                      // is the hero on a wall?
-                    if(this.onWall){
- 
-                        this.player.scale.x *= -1;
-
-                    }
 
                     // hero can't jump anymore
                     this.canJump = false;
 
                     // hero is not on the wall anymore
-                    this.onWall = false;
                     
 
 
 
 
                 }
+                if(this.walljumpCooldown<80){
+
+                this.canWallJump = false;
+                }
+                //Ancor
+                if (((cursors.left.isDown||cursors.right.isDown) && this.onWall==true && this.ancorTimer> 80)){
+                    this.player.setVelocityY(0); //alors vitesse verticale négative
+
+                    this.ancored = true;
+
+                    this.ancorTimer = 0;
+
+                    this.canWallJump = true;
+
+                    
+
+
+
+
+                }
+                
+                //wall jump
+                if (this.ancored == true && cursors.up.isDown && this.canWallJump){
+                    this.player.setVelocityY(-playerStats.playerJump); //alors vitesse verticale négative
+
+                    this.ancored = false;
+
+                    // hero can't jump anymore
+                    this.canWallJump = false;
+
+                    // hero is not on the wall anymore
+                    this.onWall = false;
+
+                    this.walljumpCooldown = 0;
+                }
+
+                if(this.onWall == false){
+                    this.ancored=false
+                }
+
+                if(this.ancored == true){
+                    this.player.setVelocityY(0);
+                }
+                
 
                 if (cursors.down.isDown && !this.player.body.touching.down){ //si la touche bas est appuyée en saut
                     this.player.setVelocityY(450); 
@@ -199,28 +252,19 @@
                     // hero can jump
                     this.canJump = true;
 
+                    this.canWallJump = true;
+
                     // hero not on the wall
                     this.onWall = false;
                 }
 
-                if(this.player.body.blocked.right && this.player.body.blocked.down){
- 
-                    // horizontal flipping hero sprite
-                    this.player.scale.x = -1;
-                }
 
-                if(this.player.body.blocked.right && !this.player.body.blocked.down){
+
+                if((this.player.body.blocked.left && !this.player.body.blocked.down)||(this.player.body.blocked.right && !this.player.body.blocked.down)){
 
                     this.onWall = true;
-                }
-
-                if(this.player.body.blocked.left && this.player.body.blocked.down){
-                    this.player.scale.x = 1;
-                }
-
-                if(this.player.body.blocked.left && !this.player.body.blocked.down){
-                    this.onWall = true;
-                    
+                }else{
+                    this.onWall = false;
                 }
 
 
