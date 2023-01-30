@@ -50,7 +50,7 @@
 
 
                 // player horizontal speed
-                playerSpeed: 200,
+                playerSpeed: 140,
 
                 // player force
                 playerJump: 250
@@ -66,12 +66,16 @@
 
             function create(){
 
+                keySpace = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+
+
+
 
                 this.add.image(800, 800, 'fond'); 
                 const carteDuNiveau = this.add.tilemap("carte");
 
                 const tileset = carteDuNiveau.addTilesetImage(
-                    "tuiles_de_jeu",
+                    "Default tileset",
                     "Phaser_tileset"
                 );
 
@@ -117,6 +121,7 @@
                 this.ancored = false;
                 this.walljumpCooldown = 0;
                 this.ancorTimer =0;
+                this.autoWalljumpCooldown = 50;
 
 
                 this.anims.create({
@@ -152,14 +157,15 @@
 
                 this.walljumpCooldown = this.walljumpCooldown + 1
                 this.ancorTimer = this.ancorTimer +1
+                this.autoWalljumpCooldown = this.autoWalljumpCooldown +1
 
                 
 
 
-                console.log("cooldown"+ this.walljumpCooldown);
-                console.log("jump"+ this.canJump);
-                console.log("walljump"+ this.canWallJump);
-                console.log("wall"+ this.onWall);
+                console.log("cooldown wall jump : "+ this.walljumpCooldown);
+                console.log("cooldown ancor : "+ this.ancorTimer);
+                console.log("autoWalljumpCooldown : "+ this.autoWalljumpCooldown);
+                
 
 
 
@@ -168,13 +174,27 @@
                 if (gameOver){return;}
 
                 if (cursors.left.isDown){ //si la touche gauche est appuyée
-                    this.player.setVelocityX(-playerStats.playerSpeed); //alors vitesse négative en X
-                    this.player.anims.play('left', true); //et animation => gauche
+
+                    if(this.autoWalljumpCooldown<10){
+                        this.player.setVelocityX(playerStats.playerSpeed); //alors vitesse positive en X
+                        this.player.anims.play('right', true); //et animation => droite
+                        
+
+                    } else {
+                        this.player.setVelocityX(-playerStats.playerSpeed); //alors vitesse négative en X
+                        this.player.anims.play('left', true); //et animation => gauche
+                    }
                 }
                 else if (cursors.right.isDown){ //sinon si la touche droite est appuyée
-                    this.player.setVelocityX(playerStats.playerSpeed); //alors vitesse positive en X
-                    this.player.anims.play('right', true); //et animation => droite
 
+                    if(this.autoWalljumpCooldown<10){
+                        this.player.setVelocityX(-playerStats.playerSpeed); //alors vitesse négative en X
+                        this.player.anims.play('left', true); //et animation => gauche
+
+                    }else {
+                        this.player.setVelocityX(playerStats.playerSpeed); //alors vitesse positive en X
+                        this.player.anims.play('right', true); //et animation => droite
+                    }
                 }
                 else{ // sinon
                     this.player.setVelocityX(0); //vitesse nulle
@@ -183,7 +203,7 @@
 
 
                 // Regular jump
-                if ((cursors.up.isDown && this.player.body.blocked.down) ){
+                if ((keySpace.isDown && this.player.body.blocked.down) ){
                     //si touche haut appuyée ET que le perso touche le sol
                     this.player.setVelocityY(-playerStats.playerJump); //alors vitesse verticale négative
 
@@ -198,12 +218,12 @@
 
 
                 }
-                if(this.walljumpCooldown<80){
+                if(this.walljumpCooldown<40){
 
                 this.canWallJump = false;
                 }
                 //Ancor
-                if (((cursors.left.isDown||cursors.right.isDown) && this.onWall==true && this.ancorTimer> 80)){
+                if (((cursors.left.isDown||cursors.right.isDown) && this.onWall==true && this.ancorTimer> 40)){
                     this.player.setVelocityY(0); //alors vitesse verticale négative
 
                     this.ancored = true;
@@ -220,7 +240,7 @@
                 }
                 
                 //wall jump
-                if (this.ancored == true && cursors.up.isDown && this.canWallJump){
+                if (this.ancored == true && keySpace.isDown && this.canWallJump){
                     this.player.setVelocityY(-playerStats.playerJump); //alors vitesse verticale négative
 
                     this.ancored = false;
@@ -232,6 +252,7 @@
                     this.onWall = false;
 
                     this.walljumpCooldown = 0;
+                    this.autoWalljumpCooldown = 0;
                 }
 
                 if(this.onWall == false){
@@ -240,6 +261,7 @@
 
                 if(this.ancored == true){
                     this.player.setVelocityY(0);
+                    
                 }
                 
 
