@@ -17,7 +17,7 @@
             
             var config = {
                 type: Phaser.AUTO,
-                width: 1200, height: 800,
+                width: 400, height: 400,
                 physics: {
                     default: 'arcade',
                     arcade: {
@@ -50,10 +50,10 @@
 
 
                 // player horizontal speed
-                playerSpeed: 140,
+                playerSpeed: 150,
 
                 // player force
-                playerJump: 250
+                playerJump: 280
 }
 
 
@@ -175,7 +175,7 @@
 
                 if (cursors.left.isDown){ //si la touche gauche est appuyée
 
-                    if(this.autoWalljumpCooldown<10){
+                    if(this.autoWalljumpCooldown<12){
                         this.player.setVelocityX(playerStats.playerSpeed); //alors vitesse positive en X
                         this.player.anims.play('right', true); //et animation => droite
                         
@@ -187,7 +187,7 @@
                 }
                 else if (cursors.right.isDown){ //sinon si la touche droite est appuyée
 
-                    if(this.autoWalljumpCooldown<10){
+                    if(this.autoWalljumpCooldown<12){
                         this.player.setVelocityX(-playerStats.playerSpeed); //alors vitesse négative en X
                         this.player.anims.play('left', true); //et animation => gauche
 
