@@ -17,7 +17,7 @@
             
             var config = {
                 type: Phaser.AUTO,
-                width: 800, height: 600,
+                width: 900, height: 900,
                 physics: {
                     default: 'arcade',
                     arcade: {
@@ -43,6 +43,10 @@
                 this.load.tilemapTiledJSON("carte", "assets/Map_Tiled.json");
                 this.load.spritesheet('HP_Sprite','assets/PV_Sprite.png',
                 {      frameWidth: 88, frameHeight: 113          });
+                this.load.image('cactus','assets/cactus.png')
+                this.load.image('checkpoint','assets/checkpoint.png')
+                this.load.image('BigSaw','assets/Big_saw.png')
+                this.load.image('Small_Saw','assets/Small_saw.png')
             }
 
 
@@ -52,10 +56,21 @@
 
 
                 // player horizontal speed
-                playerSpeed: 100,
+                playerSpeed: 130,
 
                 // player force
-                playerJump: 200
+                playerJump: 200,
+
+                Global_HP : 3,
+
+                iframe : 0,
+
+                invincible : false,
+
+                checkpoint_nb : 0,
+
+                SpawnXcoord : 50,
+                SpawnYcoord : 1520,
 }
 
 
@@ -68,13 +83,54 @@
 
             function create(){
 
+
+                // permet de sauter avec la touche espace
                 keySpace = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+                
+
+                obstacle = this.physics.add.group({allowGravity : false});
+
+
+                checkpoint = this.physics.add.group();
 
 
 
 
                 this.add.image(800, 800, 'fond'); 
                 const carteDuNiveau = this.add.tilemap("carte");
+
+                checkpoint.create(1295,1500,'checkpoint');
+                checkpoint.create(143,380,'checkpoint');
+
+
+                obstacle.create(495,1554,'cactus').setImmovable(true);
+                obstacle.create(143,1362,'cactus').setImmovable(true);
+                obstacle.create(656,1523,'cactus').setImmovable(true);
+                obstacle.create(943,1554,'cactus').setImmovable(true);
+                obstacle.create(1136,1522,'cactus').setImmovable(true);
+
+                obstacle.create(1090,1090,'BigSaw').setImmovable(true);
+                obstacle.create(1280,1120,'BigSaw').setImmovable(true);
+                obstacle.create(1280,1120,'BigSaw').setImmovable(true);
+
+                obstacle.create(1472,1026,'BigSaw').setImmovable(true);
+                obstacle.create(1345,930,'BigSaw').setImmovable(true);
+                obstacle.create(1216,930,'BigSaw').setImmovable(true);
+                obstacle.create(897,835,'BigSaw').setImmovable(true);
+
+                obstacle.create(579,930,'BigSaw').setImmovable(true);
+                obstacle.create(320,962,'BigSaw').setImmovable(true);
+                obstacle.create(192,962,'BigSaw').setImmovable(true);
+                obstacle.create(32,962,'BigSaw').setImmovable(true);
+
+                obstacle.create(1264,1264,'Small_Saw').setImmovable(true);
+                obstacle.create(1488,1360,'Small_Saw').setImmovable(true);
+                obstacle.create(1552,1520,'Small_Saw').setImmovable(true);
+
+                obstacle.create(113,848,'Small_Saw').setImmovable(true);
+                obstacle.create(113,656,'Small_Saw').setImmovable(true);
+                obstacle.create(47,752,'Small_Saw').setImmovable(true);
+                obstacle.create(47,560,'Small_Saw').setImmovable(true);
 
                 const tileset = carteDuNiveau.addTilesetImage(
                     "Default tileset",
@@ -83,24 +139,13 @@
 
 
 
-                const calque_plateformes = carteDuNiveau.createLayer(
-                    "sol",
-                    tileset
-                );
-
-                const calque_deco = carteDuNiveau.createLayer(
-                    "Obstacle",
-                    tileset
-                );
-
-
-
+                const calque_plateformes = carteDuNiveau.createLayer("sol",tileset);
+                //const calque_deco = carteDuNiveau.createLayer("Obstacle",tileset);
+                
                 calque_plateformes.setCollisionByProperty({estSolide: true});
 
-                
-
                 //spawn du joueur
-                this.player = this.physics.add.sprite(50, 1520, 'perso');
+                this.player = this.physics.add.sprite(playerStats.SpawnXcoord, playerStats.SpawnYcoord, 'perso');
 
                 this.player.setBounce(0.05);
                 this.player.setCollideWorldBounds(false);
@@ -132,6 +177,23 @@
                     frameRate: 20
                 })
 
+
+
+                
+
+                this.physics.add.collider(checkpoint,calque_plateformes)
+
+                this.physics.add.overlap(obstacle,this.player,hitObstacle,null,this)
+                this.physics.add.overlap(checkpoint,this.player,hitCheckpoint,null,this)
+
+                
+                
+
+
+
+
+                
+
                 
 
 
@@ -141,7 +203,7 @@
                 this.cameras.main.setBounds(0, 0, 1600, 1600);
                 // ancrage de la caméra sur le joueur
                 this.cameras.main.startFollow(this.player); 
-                this.cameras.main.zoom = 2.5;
+                this.cameras.main.zoom = 3.8;
 
 
                 this.onWall=false;
@@ -151,7 +213,7 @@
                 this.walljumpCooldown = 0;
                 this.ancorTimer =0;
                 this.autoWalljumpCooldown = 50;
-                this.player_HP = 3;
+                this.player_HP = playerStats.Global_HP;
 
 
 
@@ -189,20 +251,26 @@
 
                 //UI_HP.x = this.player.x
                 //UI_HP.y = this.player.y
-                UI_HP.anims.play('0'+this.player_HP+'HP',true);
+                UI_HP.anims.play('0'+playerStats.Global_HP+'HP',true);
 
                 this.walljumpCooldown = this.walljumpCooldown + 1
                 this.ancorTimer = this.ancorTimer +1
                 this.autoWalljumpCooldown = this.autoWalljumpCooldown +1
 
-
+                
+                if(playerStats.invincible = true){
+                    
+                    playerStats.iframe = playerStats.iframe +1;
+                    
+                    if(playerStats.iframe>50){
+                        playerStats.invincible = false
+                    }
+                }
 
                 
 
+                
 
-                console.log("cooldown wall jump : "+ this.walljumpCooldown);
-                console.log("cooldown ancor : "+ this.ancorTimer);
-                console.log("autoWalljumpCooldown : "+ this.autoWalljumpCooldown);
                 
 
 
@@ -211,8 +279,9 @@
 
                 if (gameOver){return;}
 
-                if (cursors.left.isDown){ //si la touche gauche est appuyée
+                if (cursors.left.isDown){
 
+                    // si ca fait moins de 20 frame qu'un wall jump a été déclancher alors force la direction
                     if(this.autoWalljumpCooldown<20){
                         this.player.setVelocityX(playerStats.playerSpeed); //alors vitesse positive en X
                         this.player.anims.play('right', true); //et animation => droite
@@ -225,6 +294,7 @@
                 }
                 else if (cursors.right.isDown){ //sinon si la touche droite est appuyée
 
+                    // si ca fait moins de 20 frame qu'un wall jump a été déclancher alors force la direction
                     if(this.autoWalljumpCooldown<20){
                         this.player.setVelocityX(-playerStats.playerSpeed); //alors vitesse négative en X
                         this.player.anims.play('left', true); //et animation => gauche
@@ -245,11 +315,8 @@
                     //si touche haut appuyée ET que le perso touche le sol
                     this.player.setVelocityY(-playerStats.playerJump); //alors vitesse verticale négative
 
-
-                    // hero can't jump anymore
+                    // le joueur n'est plus autorisé a faire un saut normal
                     this.canJump = false;
-
-                    // hero is not on the wall anymore
                     
 
 
@@ -258,22 +325,19 @@
                 }
                 if(this.walljumpCooldown<40){
 
+                    //on force le status de la possibilité de walljump si ca fait plus de 40 frame qu'aucun n'a été fait
                 this.canWallJump = false;
                 }
-                //Ancor
+
+
+                //Ancor , le joueur s'acroche a un mur si il appuye sur une des direction en alors qu'il touche un mur et que cela fait + de 40 frames qu'il n'a pas wall jump
                 if (((cursors.left.isDown||cursors.right.isDown) && this.onWall==true && this.ancorTimer> 40)){
-                    this.player.setVelocityY(0); //alors vitesse verticale négative
+                    this.player.setVelocityY(0); //alors ON FORCE le fait de ne pas tombé ca fait "glisser" le joueur d'un pixel par frame cependant
 
+                    // tant qu'il maintient la direction cela force les valeurs suivantes
                     this.ancored = true;
-
                     this.ancorTimer = 0;
-
                     this.canWallJump = true;
-
-                    
-
-
-
 
                 }
                 
@@ -283,21 +347,24 @@
 
                     this.ancored = false;
 
-                    // hero can't jump anymore
+                    // ne peux pas a nouveau fert un saut simple (au cas ou)
                     this.canWallJump = false;
 
-                    // hero is not on the wall anymore
+                    // n'est plus sur le mur
                     this.onWall = false;
 
+                    // On reset les cooldown pour le walljump (walljumpcooldown n'est la que pour le debug)
                     this.walljumpCooldown = 0;
                     this.autoWalljumpCooldown = 0;
                 }
 
+                //on verifie les différentes conditions
                 if(this.onWall == false){
                     this.ancored=false
                 }
 
                 if(this.ancored == true){
+                    //alors ON FORCE le fait de ne pas tombé ca fait "glisser" le joueur d'un pixel par frame cependant (a nouveau pour etre sur)
                     this.player.setVelocityY(0);
                     
                 }
@@ -326,6 +393,52 @@
                 }else{
                     this.onWall = false;
                 }
+
+
+            }
+
+            function hitObstacle(player,obstacle){
+
+                
+
+
+                if(playerStats.invincible == false){
+
+                    console.log("hit");
+
+                    playerStats.Global_HP = playerStats.Global_HP-1
+                    playerStats.invincible = true;
+                    playerStats.iframe = 0;
+
+                if(playerStats.Global_HP<=0){
+                    playerStats.Global_HP = 3;
+                    player.x = playerStats.SpawnXcoord;
+                    player.y = playerStats.SpawnYcoord;
+                }
+
+                }
+                
+
+            }
+
+            function hitCheckpoint(player,obstacle){
+
+                console.log("check");
+
+                obstacle.disableBody(true,true);
+                playerStats.checkpoint_nb = playerStats.checkpoint_nb +1;
+
+                if(playerStats.checkpoint_nb == 1){
+
+                    playerStats.SpawnXcoord = 1295;
+                    playerStats.SpawnYcoord = 1500;
+                }
+                if(playerStats.checkpoint_nb == 2){
+
+                playerStats.SpawnXcoord = 143;
+                playerStats.SpawnYcoord = 380;
+                }
+
 
 
             }
