@@ -17,11 +17,11 @@
             
             var config = {
                 type: Phaser.AUTO,
-                width: 400, height: 400,
+                width: 800, height: 600,
                 physics: {
                     default: 'arcade',
                     arcade: {
-                    gravity: { y: 500 },
+                    gravity: { y: 400 },
                     debug: true
                     }
                 },
@@ -37,10 +37,12 @@
 
             function preload(){
                 this.load.spritesheet('perso','assets/perso.png',
-                { frameWidth: 32, frameHeight: 32 });
+                { frameWidth: 22, frameHeight: 28 });
                 this.load.image('fond', 'assets/background.png')
                 this.load.image("Phaser_tileset", "assets/Tileset.png");
                 this.load.tilemapTiledJSON("carte", "assets/Map_Tiled.json");
+                this.load.spritesheet('HP_Sprite','assets/PV_Sprite.png',
+                {      frameWidth: 88, frameHeight: 113          });
             }
 
 
@@ -50,10 +52,10 @@
 
 
                 // player horizontal speed
-                playerSpeed: 150,
+                playerSpeed: 100,
 
                 // player force
-                playerJump: 280
+                playerJump: 200
 }
 
 
@@ -104,7 +106,33 @@
                 this.player.setCollideWorldBounds(false);
 
 
-                this.physics.add.collider(this.player, calque_plateformes); 
+                this.physics.add.collider(this.player, calque_plateformes);
+                
+                // spawn UI
+                UI_HP = this.add.sprite(this.player.x,this.player.y, 'HP_Sprite');
+
+                UI_HP.anims.create({
+                    key: '00HP',
+                    frames: [ { key: 'HP_Sprite', frame: 0 } ],
+                    frameRate: 20
+                })
+                UI_HP.anims.create({
+                    key: '01HP',
+                    frames: [ { key: 'HP_Sprite', frame: 1 } ],
+                    frameRate: 20
+                })
+                UI_HP.anims.create({
+                    key: '02HP',
+                    frames: [ { key: 'HP_Sprite', frame: 2 } ],
+                    frameRate: 20
+                })
+                UI_HP.anims.create({
+                    key: '03HP',
+                    frames: [ { key: 'HP_Sprite', frame: 3 } ],
+                    frameRate: 20
+                })
+
+                
 
 
                 // redimentionnement du monde avec les dimensions calculées via tiled
@@ -113,6 +141,7 @@
                 this.cameras.main.setBounds(0, 0, 1600, 1600);
                 // ancrage de la caméra sur le joueur
                 this.cameras.main.startFollow(this.player); 
+                this.cameras.main.zoom = 2.5;
 
 
                 this.onWall=false;
@@ -122,6 +151,8 @@
                 this.walljumpCooldown = 0;
                 this.ancorTimer =0;
                 this.autoWalljumpCooldown = 50;
+                this.player_HP = 3;
+
 
 
                 this.anims.create({
@@ -155,9 +186,16 @@
 
             function update(){
 
+
+                UI_HP.x = this.player.x
+                UI_HP.y = this.player.y
+                UI_HP.anims.play('0'+this.player_HP+'HP',true);
+
                 this.walljumpCooldown = this.walljumpCooldown + 1
                 this.ancorTimer = this.ancorTimer +1
                 this.autoWalljumpCooldown = this.autoWalljumpCooldown +1
+
+
 
                 
 
@@ -175,7 +213,7 @@
 
                 if (cursors.left.isDown){ //si la touche gauche est appuyée
 
-                    if(this.autoWalljumpCooldown<12){
+                    if(this.autoWalljumpCooldown<20){
                         this.player.setVelocityX(playerStats.playerSpeed); //alors vitesse positive en X
                         this.player.anims.play('right', true); //et animation => droite
                         
@@ -187,7 +225,7 @@
                 }
                 else if (cursors.right.isDown){ //sinon si la touche droite est appuyée
 
-                    if(this.autoWalljumpCooldown<12){
+                    if(this.autoWalljumpCooldown<20){
                         this.player.setVelocityX(-playerStats.playerSpeed); //alors vitesse négative en X
                         this.player.anims.play('left', true); //et animation => gauche
 
