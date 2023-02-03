@@ -22,7 +22,7 @@
                     default: 'arcade',
                     arcade: {
                     gravity: { y: 400 },
-                    debug: false
+                    debug: true
                     }
                 },
                 input:{gamepad:true},
@@ -47,6 +47,8 @@
                 this.load.image('checkpoint','assets/checkpoint.png')
                 this.load.image('BigSaw','assets/Big_saw.png')
                 this.load.image('Small_Saw','assets/Small_saw.png')
+                this.load.image('bush','assets/bush.png')
+                this.load.image('Victory','assets/victory.png')
             }
 
 
@@ -93,6 +95,8 @@
 
                 checkpoint = this.physics.add.group();
 
+                
+
 
 
 
@@ -101,6 +105,8 @@
 
                 checkpoint.create(1295,1500,'checkpoint');
                 checkpoint.create(143,380,'checkpoint');
+                checkpoint.create(1300,200,'checkpoint');
+
 
 
                 obstacle.create(495,1554,'cactus').setImmovable(true);
@@ -131,6 +137,24 @@
                 obstacle.create(113,656,'Small_Saw').setImmovable(true);
                 obstacle.create(47,752,'Small_Saw').setImmovable(true);
                 obstacle.create(47,560,'Small_Saw').setImmovable(true);
+
+                obstacle.create(461,400,'bush').setImmovable(true);
+                obstacle.create(587,400,'bush').setImmovable(true);
+                obstacle.create(587,400,'bush').setImmovable(true);
+                obstacle.create(528,176,'bush').setImmovable(true);
+                obstacle.create(430,80,'bush').setImmovable(true);
+                obstacle.create(787,337,'bush').setImmovable(true);
+                obstacle.create(881,206,'bush').setImmovable(true);
+                obstacle.create(1007,209,'bush').setImmovable(true);
+                obstacle.create(945,468,'bush').setImmovable(true);
+                obstacle.create(1104,431,'bush').setImmovable(true);
+                obstacle.create(1328,433,'bush').setImmovable(true);
+                obstacle.create(1456,433,'bush').setImmovable(true);
+                obstacle.create(1490,433,'bush').setImmovable(true);
+                obstacle.create(1456,562,'bush').setImmovable(true);
+                obstacle.create(1488,278,'bush').setImmovable(true);
+                obstacle.create(1488,242,'bush').setImmovable(true);
+                obstacle.create(1488,206,'bush').setImmovable(true);
 
                 const tileset = carteDuNiveau.addTilesetImage(
                     "Default tileset",
@@ -182,6 +206,7 @@
                 
 
                 this.physics.add.collider(checkpoint,calque_plateformes)
+                this.player.body.setCollideWorldBounds(true,null,null)
 
                 this.physics.add.overlap(obstacle,this.player,hitObstacle,null,this)
                 this.physics.add.overlap(checkpoint,this.player,hitCheckpoint,null,this)
@@ -267,6 +292,12 @@
                     }
                 }
 
+                if(this.player.y > 1585) {
+                    this.player.x = playerStats.SpawnXcoord
+                    this.player.y = playerStats.SpawnYcoord
+                    playerStats.Global_HP = 3
+                }
+
                 
 
                 
@@ -282,10 +313,15 @@
                 if (cursors.left.isDown){
 
                     // si ca fait moins de 20 frame qu'un wall jump a été déclancher alors force la direction
-                    if(this.autoWalljumpCooldown<20){
+                    if(this.autoWalljumpCooldown<2){
                         this.player.setVelocityX(playerStats.playerSpeed); //alors vitesse positive en X
                         this.player.anims.play('right', true); //et animation => droite
                         
+
+                    } else if (this.autoWalljumpCooldown<20){
+
+                        this.player.anims.play('right', true); //et animation => droite
+
 
                     } else {
                         this.player.setVelocityX(-playerStats.playerSpeed); //alors vitesse négative en X
@@ -295,16 +331,21 @@
                 else if (cursors.right.isDown){ //sinon si la touche droite est appuyée
 
                     // si ca fait moins de 20 frame qu'un wall jump a été déclancher alors force la direction
-                    if(this.autoWalljumpCooldown<20){
+                    if(this.autoWalljumpCooldown<2){
                         this.player.setVelocityX(-playerStats.playerSpeed); //alors vitesse négative en X
                         this.player.anims.play('left', true); //et animation => gauche
 
-                    }else {
+                    } else if (this.autoWalljumpCooldown<20){
+
+                    this.player.anims.play('left', true); //et animation => droite
+
+
+                    } else {
                         this.player.setVelocityX(playerStats.playerSpeed); //alors vitesse positive en X
                         this.player.anims.play('right', true); //et animation => droite
                     }
                 }
-                else{ // sinon
+                else { // sinon
                     this.player.setVelocityX(0); //vitesse nulle
                     this.player.anims.play('turn'); //animation fait face caméra
                 }
@@ -437,6 +478,14 @@
 
                 playerStats.SpawnXcoord = 143;
                 playerStats.SpawnYcoord = 380;
+                }
+                if(playerStats.checkpoint_nb == 3){
+
+                playerStats.SpawnXcoord = 143;
+                playerStats.SpawnYcoord = 380;
+                player.disableBody;
+                victory = this.physics.add.group()
+                obstacle.create(1300,200,'victory').setImmovable(true);
                 }
 
 
