@@ -22,7 +22,7 @@
                     default: 'arcade',
                     arcade: {
                     gravity: { y: 400 },
-                    debug: true
+                    debug: false
                     }
                 },
                 input:{gamepad:true},
@@ -140,7 +140,7 @@
 
 
                 const calque_plateformes = carteDuNiveau.createLayer("sol",tileset);
-                //const calque_deco = carteDuNiveau.createLayer("Obstacle",tileset);
+                const calque_deco = carteDuNiveau.createLayer("Obstacle",tileset);
                 
                 calque_plateformes.setCollisionByProperty({estSolide: true});
 
@@ -203,7 +203,7 @@
                 this.cameras.main.setBounds(0, 0, 1600, 1600);
                 // ancrage de la caméra sur le joueur
                 this.cameras.main.startFollow(this.player); 
-                this.cameras.main.zoom = 3.8;
+                this.cameras.main.zoom = 3.5;
 
 
                 this.onWall=false;
